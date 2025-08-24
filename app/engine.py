@@ -18,16 +18,18 @@ def score_guess(secret: Code, guess: Code) -> Tuple[int, int]:
       guess  = [0, 2, 4, 6]
       correct_positions = 1  (the first 0 matches)
       correct_numbers   = 1  (only one digit, '0', appears in both)
+      Returns a tuple: (correct_numbers, correct_positions)
     """
 
-    # Defensive check to start --> length incorrect
-    if len(secret) != 4 or len(guess) != 4:
-        raise ValueError("Both secret and guess must have length of 4.")
+    # 0, Validate lengths match
+    n = len(secret)
+    if n == 0 or len(guess) != n:
+        raise ValueError("Secret and guess must be the same non-zero length.")
 
     # 1. Count exact position matches --> correct_positions
     correct_positions = 0
     i = 0
-    while i < 4:
+    while i < n:
         if secret[i] == guess[i]:
             correct_positions += 1
         i += 1
@@ -38,7 +40,7 @@ def score_guess(secret: Code, guess: Code) -> Tuple[int, int]:
 
     # Fill counts for secret
     idx = 0
-    while idx < 4:
+    while idx < n:
         digit = secret[idx]
         # ignore out of range
         if digit >= 0 and digit <= 7:
@@ -47,7 +49,7 @@ def score_guess(secret: Code, guess: Code) -> Tuple[int, int]:
 
     # Fill counts for guess
     idx = 0
-    while idx < 4:
+    while idx < n:
         digit = guess[idx]
         if digit >= 0 and digit <= 7:
             guess_counts[digit] += 1
@@ -68,14 +70,15 @@ def score_guess(secret: Code, guess: Code) -> Tuple[int, int]:
 
 def is_win(secret: Code, guess: Code) -> bool:
     """
-    Win = all 4 digits match in order.
-    We can check each position one by one.
+    Win = all digits match in order, for all positions.
+    Works for any length, as long as lengths match.
     """
-    if len(secret) != 4 or len(guess) != 4:
+    n = len(secret)
+    if n == 0 or len(guess) != n:
         return False
 
     i = 0
-    while i < 4:
+    while i < n:
         if secret[i] != guess[i]:
             return False
         i += 1

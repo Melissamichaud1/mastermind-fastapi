@@ -35,13 +35,11 @@ class GameStore:
         self._games: Dict[str, Game] = {}
         self._lock = RLock()
 
-    def create(self, secret: Code) -> Game:
+    def create(self, secret: Code, attempts: int) -> Game:
         new_id = str(uuid4())
-        game = Game(id=new_id, secret=secret)
-
+        game = Game(id=new_id, secret=secret, attempts_left=attempts)
         with self._lock:
             self._games[new_id] = game
-
         return game
 
     def get(self, game_id: str) -> Optional[Game]:
@@ -56,6 +54,11 @@ class GameStore:
 
             if game.status != "in_progress":
                 # IF game already ended, just return it (ignore extra guesses)
+                return game
+
+            # --- length guard ---
+            if len(game.secret) != len(attempt):
+            # Don’t modify game if guess length is wrong
                 return game
 
             # Get the feedback using the engine

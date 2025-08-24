@@ -29,16 +29,40 @@ app.add_middleware(
     allow_headers=["*"]
 )
 
+# Manage game state in memory
 store = GameStore()
 
 @app.post("/games", response_model=NewGameResponse, summary="Start a new game")
-def start_game() -> NewGameResponse:
-    secret = fetch_code()
-    game = store.create(secret)
+def start_game(difficulty: str = "medium") -> NewGameResponse:
+    """
+    Extension #1:
+    Start a new game with difficulty level.
+    - easy:   length=3, attempts=8
+    - medium: length=4, attempts=10 (default)
+    - hard:   length=5, attempts=12
+    """
+    if difficulty == "easy":
+        length = 3
+        attempts = 8
+    elif difficulty == "hard":
+        length = 5
+        attempts = 12
+    else:
+        difficulty = "medium"
+        length = 4
+        attempts = 10
+
+    # Generate secret of variable length
+    secret = fetch_code(length)
+
+    # Create game in store with attempts set
+    game = store.create(secret, attempts)
+
     return NewGameResponse(
         game_id=game.id,
         attempts_left=game.attempts_left,
         status=game.status,
+        difficulty=difficulty, # Extension #1
     )
 
 @app.get("/games/{game_id}", response_model=GameState, summary="Get current game state")
@@ -92,6 +116,14 @@ def submit_guess(game_id: str, payload: GuessRequest) -> GuessResponse:
             ) if last else None,
             secret=game.secret,
             note=f"Game {game.status}. No more guesses allowed.",
+        )
+
+    # Extension #1 - Length check
+    required_length = len(game.secret)
+    if len(payload.guess) != required_length:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Your guess must have exactly {required_length} digits for this difficulty."
         )
 
     # 3. Apply the guess once (this decrements attempts and appends feedback)
