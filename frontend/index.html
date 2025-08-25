@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Mastermind (FastAPI)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <!-- Custom font for the main headings -->
+    <style>
+      @font-face {
+        font-family: "MightySouly";
+        src: url("./fonts/MightySouly-lxggD.ttf") format("truetype");
+        font-weight: 400;
+        font-style: normal;
+        font-display: swap;
+      }
+    </style>
+
+    <!-- Poppins for body text -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <style>
+      /* ========= THEME VARIABLES =========
+         I use CSS custom properties for both light and dark mode.
+         This keeps the colors consistent and lets me flip themes with a single attribute.
+      */
+      :root {
+        --radius: 14px;
+
+        /* shared pink accents */
+        --accent: #e467a3;
+        --accent2: #ff86cf;
+        --accent3: #ffc0e6;
+
+        /* dark theme (default) */
+        --bg: #9f708f;
+        --bg2: #9f708f;
+        --panel: #331529;
+        --panelBorder: #4a1f3a;
+        --text: #fff4fb;
+        --subtext: #ffd7ec;
+        --muted: #6f3158;
+        --rowStripe: rgba(255, 134, 207, 0.06);
+        --good: #7cecc9;
+
+        --btnShadow: rgba(255, 134, 207, 0.28);
+        --descTint: rgba(255, 134, 207, 0.08);
+        --tableStripeOpacity: 0.06;
+        --inputBg: #220c1b;
+      }
+      :root[data-theme="light"] {
+        --bg: #e7cad5;
+        --bg2: #e7cad5;
+        --panel: #ffffff;
+        --panelBorder: #ffd2ea;
+        --text: #3a152e;
+        --subtext: #6a2c53;
+        --muted: #eec2da;
+        --rowStripe: rgba(255, 134, 207, 0.14);
+        --good: #2aa989;
+
+        --btnShadow: rgba(255, 134, 207, 0.22);
+        --descTint: rgba(255, 134, 207, 0.12);
+        --tableStripeOpacity: 0.12;
+        --inputBg: #fff7fb;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        height: 100%;
+      }
+
+      body {
+        margin: 0;
+        background: linear-gradient(180deg, var(--bg), var(--bg2) 70%);
+        color: var(--text);
+        font-family: Poppins, system-ui, -apple-system, Segoe UI, Roboto, Arial,
+          sans-serif;
+        display: flex;
+        align-items: flex-start;
+        justify-content: center;
+        padding: 16px 24px 32px; /* space around content */
+        line-height: 1.6;
+        transition: background 0.25s ease, color 0.25s ease;
+      }
+
+      .container {
+        width: 100%;
+        max-width: 1080px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 20px;
+        text-align: center;
+      }
+
+      /* Top bar: title stays centered, theme toggle sits on the right */
+      .topbar {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+      .theme-toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        background: linear-gradient(180deg, var(--accent3), var(--accent2));
+        color: #20101a;
+        border: none;
+        border-radius: 999px;
+        padding: 8px 12px;
+        font-weight: 700;
+        cursor: pointer;
+        box-shadow: 0 8px 18px var(--btnShadow);
+      }
+
+      h1 {
+        font-family: "MightySouly", Poppins, sans-serif;
+        font-size: 55px;
+        margin: 0;
+        letter-spacing: 0.2px;
+        line-height: 1.1;
+      }
+
+      h2,
+      h3,
+      h4,
+      h5,
+      h6 {
+        font-family: "MightySouly", Poppins, sans-serif;
+      }
+
+      h2 {
+        font-size: 30px;
+        font-weight: 400;
+        letter-spacing: 0.6px;
+      }
+
+      .subtitle {
+        color: var(--subtext);
+        font-size: 14px;
+        margin-top: 4px;
+      }
+
+      .hero {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        margin: 6px 0 2px;
+      }
+      .peg {
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: var(--accent);
+        box-shadow: 0 0 12px rgba(255, 79, 163, 0.45),
+          inset 0 0 4px rgba(255, 255, 255, 0.15);
+        animation: pop 1.4s ease-in-out infinite;
+      }
+      .peg:nth-child(2) {
+        animation-delay: 0.15s;
+        background: var(--accent2);
+      }
+      .peg:nth-child(3) {
+        animation-delay: 0.3s;
+        background: var(--accent3);
+      }
+      .peg:nth-child(4) {
+        animation-delay: 0.45s;
+        background: var(--accent2);
+      }
+      .peg:nth-child(5) {
+        animation-delay: 0.6s;
+        background: var(--accent);
+      }
+      @keyframes pop {
+        0%,
+        100% {
+          transform: translateY(0) scale(1);
+          filter: brightness(1);
+        }
+        50% {
+          transform: translateY(-6px) scale(1.08);
+          filter: brightness(1.2);
+        }
+      }
+
+      /* Rule explanation box */
+      .desc {
+        max-width: 860px;
+        color: var(--subtext);
+        background: linear-gradient(180deg, var(--descTint), transparent),
+          var(--panel);
+        border: 1px solid var(--panelBorder);
+        border-radius: var(--radius);
+        padding: 16px 18px;
+        text-align: left;
+        box-shadow: 0 10px 24px var(--btnShadow),
+          inset 0 0 0.5px rgba(255, 255, 255, 0.12);
+      }
+      .desc p {
+        margin: 8px 0;
+      }
+
+      .grid {
+        width: 100%;
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 22px;
+      }
+      @media (min-width: 980px) {
+        .grid {
+          grid-template-columns: 1.25fr 0.9fr;
+          gap: 22px;
+        }
+      }
+
+      /* Panels for game + scoreboard */
+      .panel {
+        background: linear-gradient(180deg, var(--descTint), transparent),
+          var(--panel);
+        border: 1px solid var(--panelBorder);
+        border-radius: var(--radius);
+        padding: 20px;
+        box-shadow: 0 12px 28px var(--btnShadow),
+          inset 0 0 0.5px rgba(255, 255, 255, 0.12);
+        transition: background 0.25s ease, color 0.25s ease,
+          border-color 0.25s ease;
+      }
+
+      .row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        align-items: center;
+        justify-content: center;
+      }
+      .stack {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        align-items: center;
+      }
+
+      /* Badges show game info */
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: rgba(255, 134, 207, 0.12);
+        border: 1px solid var(--panelBorder);
+        padding: 8px 12px;
+        border-radius: 999px;
+        color: var(--subtext);
+        font-size: 13px;
+      }
+      select,
+      input[type="text"] {
+        background: var(--inputBg);
+        color: var(--text);
+        border: 1px solid var(--muted);
+        border-radius: 12px;
+        padding: 12px 14px;
+        outline: none;
+        min-width: 260px;
+      }
+      button {
+        background: linear-gradient(180deg, var(--accent2), var(--accent));
+        color: white;
+        border: none;
+        border-radius: 12px;
+        padding: 12px 16px;
+        cursor: pointer;
+        font-weight: 700;
+        letter-spacing: 0.2px;
+        box-shadow: 0 8px 18px var(--btnShadow);
+        transition: transform 0.06s ease;
+      }
+      button:active {
+        transform: translateY(1px);
+      }
+
+      .secondary {
+        background: linear-gradient(180deg, #f8c3e4, #ff86cf);
+        color: #3a152e;
+      }
+
+      .help {
+        color: var(--subtext);
+        font-size: 14px;
+      }
+      .spacer {
+        height: 40px;
+      }
+
+      /* Table for guesses + stats */
+      .table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 10px;
+        border: 1px solid var(--panelBorder);
+      }
+      .table th,
+      .table td {
+        border-bottom: 1px solid var(--panelBorder);
+        padding: 10px 12px;
+        text-align: left;
+        font-size: 14px;
+      }
+      .table th {
+        color: #ffd1ea;
+        font-weight: 600;
+      }
+      :root[data-theme="light"] .table th {
+        color: #7a2b55;
+      }
+      .table tr:nth-child(even) {
+        background-color: var(--rowStripe);
+      }
+
+      /* Utilities */
+      .nowrap {
+        white-space: nowrap;
+      }
+      .mono {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas,
+          "Liberation Mono", monospace;
+      }
+
+      /* "Last Guess" feedback pills */
+      .pills {
+        display: inline-flex;
+        gap: 8px;
+        align-items: center;
+      }
+      .pill {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 999px;
+        background: var(--accent);
+        color: #fff;
+        font-weight: 700;
+        font-size: 12px;
+      }
+
+      .note {
+        color: var(--subtext);
+        font-size: 15px;
+      }
+      .secret {
+        font-weight: 800;
+        color: var(--good);
+      }
+
+      /* Scoreboard JSON styled nicely */
+      .jsonBox {
+        white-space: pre-wrap;
+        background: var(--inputBg);
+        border: 1px solid var(--muted);
+        padding: 12px;
+        border-radius: 12px;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 12.5px;
+        color: #ffe2f3;
+      }
+      :root[data-theme="light"] .jsonBox {
+        color: #5a2a45;
+      }
+      /* Stats table tweaks */
+      .stats-table .section-head {
+        text-align: center;
+        font-weight: 700;
+        letter-spacing: 0.2px;
+        padding: 10px 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container" id="page">
+      <div class="topbar">
+        <!-- Hidden element keeps the H1 visually centered -->
+        <div style="visibility: hidden">.</div>
+        <button id="theme-toggle" class="theme-toggle" title="Toggle theme">
+          Light / Dark
+        </button>
+      </div>
+
+      <h1>Mastermind</h1>
+      <div class="hero" aria-hidden="true">
+        <div class="peg"></div>
+        <div class="peg"></div>
+        <div class="peg"></div>
+        <div class="peg"></div>
+        <div class="peg"></div>
+      </div>
+
+      <!-- Game instructions -->
+      <div class="desc">
+        <p>
+          <b>How to play:</b> The server creates a secret code using numbers
+          0–7. You have a limited number of attempts to guess the code.
+        </p>
+        <p>After each guess you get feedback:</p>
+        <ul style="margin: 8px 0 0 18px; padding: 0">
+          <li>
+            <b>Correct numbers</b> — How many of your numbers appear anywhere in
+            the secret.
+          </li>
+          <li>
+            <b>Correct positions</b> — How many numbers are in the correct
+            index(s).
+          </li>
+        </ul>
+        <p style="margin: 8px 0 0 0">
+          Numbers may repeat. Difficulty sets code length & attempts.
+        </p>
+      </div>
+
+      <div class="grid">
+        <!-- LEFT: Game area -->
+        <div class="panel">
+          <h2>New Game</h2>
+          <div class="row" style="margin-bottom: 10px">
+            <select id="difficulty">
+              <option value="easy">Easy (3 digits)</option>
+              <option value="medium" selected>Medium (4 digits)</option>
+              <option value="hard">Hard (5 digits)</option>
+            </select>
+            <button id="start-btn" class="btn-pink">Start Game</button>
+          </div>
+
+          <!-- Game state info -->
+          <div class="row" id="game-info" style="gap: 10px; margin-bottom: 6px">
+            <span class="badge">Game ID: <b>none</b></span>
+            <span class="badge">Attempts: -</span>
+            <span class="badge">Status: -</span>
+            <span class="badge">Difficulty: -</span>
+          </div>
+
+          <div class="spacer"></div>
+          <h2>Make a Guess</h2>
+          <div class="stack">
+            <div class="help" id="guess-help">
+              Enter 4 digits (0–7), separated by spaces. Example:
+              <code>0 1 2 3</code>
+            </div>
+            <div class="row">
+              <input id="guess-input" type="text" placeholder="0 1 2 3" />
+              <button id="guess-btn" class="btn-pink">Submit Guess</button>
+              <button id="hint-btn" class="secondary">Get Hint</button>
+            </div>
+
+            <!-- Last guess card -->
+            <div
+              id="last-guess"
+              class="panel"
+              style="margin-top: 10px; display: none; padding: 12px"
+            >
+              <div class="pills" style="margin-bottom: 6px">
+                <span id="pill-numbers" class="pill">Numbers: 0</span>
+                <span id="pill-positions" class="pill">Positions: 0</span>
+              </div>
+              <div class="mono nowrap" id="last-guess-array">[—]</div>
+              <div
+                id="last-guess-message"
+                class="help"
+                style="margin-top: 6px"
+              ></div>
+            </div>
+
+            <div class="help" id="hint-result"></div>
+            <div id="last-feedback" class="help"></div>
+          </div>
+
+          <div class="spacer"></div>
+          <h2>History of Guesses</h2>
+          <table class="table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Guess</th>
+                <th>Correct Number(s)</th>
+                <th>Correct Position(s)</th>
+                <th>Message</th>
+              </tr>
+            </thead>
+            <tbody id="history-body"></tbody>
+          </table>
+
+          <div class="spacer"></div>
+          <div id="final-note" class="note"></div>
+          <div id="secret-box" class="note"></div>
+        </div>
+
+        <!-- RIGHT: Scoreboard -->
+        <div class="panel">
+          <h2>Scoreboard</h2>
+          <div class="row" style="margin-bottom: 8px">
+            <button id="refresh-stats" class="btn-pink">Refresh Stats</button>
+            <button id="reset-stats" class="btn-pink">Reset Stats</button>
+          </div>
+          <div id="stats-msg" class="help" style="margin-bottom: 6px"></div>
+          <div id="stats-json" class="jsonBox"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Theme toggle JS-->
+    <script>
+      (function () {
+        const root = document.documentElement;
+        const btn = document.getElementById("theme-toggle");
+        const saved = localStorage.getItem("mm-theme") || "dark";
+        root.setAttribute("data-theme", saved);
+        btn.textContent = saved === "light" ? "Dark Mode" : "Light Mode";
+        btn.addEventListener("click", () => {
+          const current = root.getAttribute("data-theme") || "dark";
+          const next = current === "dark" ? "light" : "dark";
+          root.setAttribute("data-theme", next);
+          localStorage.setItem("mm-theme", next);
+          btn.textContent = next === "light" ? "Dark Mode" : "Light Mode";
+        });
+      })();
+    </script>
+
+    <!-- API logic -->
+    <script src="./app.js"></script>
+  </body>
+</html>

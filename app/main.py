@@ -208,7 +208,7 @@ def reset_stats() -> dict:
     return {"message": "Stats reset for this server session."}
 
 # Extension 3: Get a hint
-@app.get("/games/{game_id}/hint", summary="Get a hint: Reveals one digit/position (once per game)")
+@app.get("/games/{game_id}/hint", response_model=HintOut, summary="Get a one-time hint: Reveals one digit/position")
 def get_hint(game_id: str) -> HintOut:
     result = store.give_hint(game_id)
     status = result[0]
