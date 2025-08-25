@@ -70,11 +70,12 @@ Interactive docs are available at http://127.0.0.1:8000/docs
 
 ## 🌐 Frontend
 
-The frontend lives in the project root (index.html, app.js, CSS inside HTML).
+The frontend lives in the project root inside the frontend folder (index.html, app.js, CSS, HTML).
 
 To run locally:
 
-1. Start a local dev server:
+1. CD into frontend folder
+2. Start a local dev server:
 
 ```
 python3 -m http.server 5173
