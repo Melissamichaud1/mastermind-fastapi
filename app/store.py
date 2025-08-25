@@ -9,7 +9,7 @@ from uuid import uuid4
 from time import time
 from threading import RLock
 
-from .types import Code, GameStatus
+from .types import Code, GameStatus, Difficulty
 from .engine import score_guess, is_win
 
 @dataclass
@@ -29,17 +29,59 @@ class Game:
     history: List[GuessEntry] = field(default_factory=list)
     created_at: float = field(default_factory=time)
     updated_at: float = field(default_factory=time)
+    # Extension 2: store starting attempts to calculate guesses used in wins
+    initial_attempts: int = 10
+    difficulty: Difficulty = "medium"
+
+# Extension 2: Scoreboard structure
+@dataclass
+class Stats:
+    games_started: int = 0
+    games_won: int = 0
+    games_lost: int = 0
+
+    current_streak: int = 0
+    best_streak: int = 0
+
+    total_guesses_in_wins: int = 0
+    fastest_win_attempts: Optional[int] = None
+
+    # per-difficulty counters
+    easy_started: int = 0
+    medium_started: int = 0
+    hard_started: int = 0
+    easy_won: int = 0
+    medium_won: int = 0
+    hard_won: int = 0
+
 
 class GameStore:
     def __init__(self) -> None:
         self._games: Dict[str, Game] = {}
         self._lock = RLock()
+        # Extension 2: initialize stats
+        self._stats = Stats()
 
-    def create(self, secret: Code, attempts: int) -> Game:
+    def create(self, secret: Code, attempts: int, difficulty: Difficulty = "medium") -> Game:
         new_id = str(uuid4())
-        game = Game(id=new_id, secret=secret, attempts_left=attempts)
+        game = Game(
+            id=new_id,
+            secret=secret,
+            attempts_left=attempts,
+            initial_attempts=attempts,  # Extension 2
+            difficulty=difficulty,      # Extension 2
+        )
         with self._lock:
             self._games[new_id] = game
+
+            # Extension 2: Update scoreboard when game is created
+            self._stats.games_started += 1
+            if difficulty == "easy":
+                self._stats.easy_started += 1
+            elif difficulty == "hard":
+                self._stats.hard_started += 1
+            else:
+                self._stats.medium_started += 1
         return game
 
     def get(self, game_id: str) -> Optional[Game]:
@@ -53,13 +95,12 @@ class GameStore:
                 return None
 
             if game.status != "in_progress":
-                # IF game already ended, just return it (ignore extra guesses)
+                # If game already ended, just return it (ignore extra guesses)
                 return game
 
             # --- length guard ---
             if len(game.secret) != len(attempt):
-            # Don’t modify game if guess length is wrong
-                return game
+                raise ValueError(f"Guess must have exactly {len(game.secret)} digits for this game.")
 
             # Get the feedback using the engine
             result = score_guess(game.secret, attempt)
@@ -98,9 +139,46 @@ class GameStore:
 
             if is_win(game.secret, attempt):
                 game.status = "won"
+                self._update_stats_on_end(game, won=True)    # Extension 2: update stats on WIN
             else:
                 if game.attempts_left <= 0:
                     game.status = "lost"
+                    self._update_stats_on_end(game, won=False)  # Extension 2: update stats on LOSS
 
             game.updated_at = time()
             return game
+
+    # Extension 2: Helper updates scoreboard exactly once per game
+    def _update_stats_on_end(self, game: Game, won: bool) -> None:
+        if won:
+            self._stats.games_won += 1
+
+            # per-difficulty wins
+            if game.difficulty == "easy":
+                self._stats.easy_won += 1
+            elif game.difficulty == "hard":
+                self._stats.hard_won += 1
+            else:
+                self._stats.medium_won += 1
+
+            # streaks
+            self._stats.current_streak += 1
+            if self._stats.current_streak > self._stats.best_streak:
+                self._stats.best_streak = self._stats.current_streak
+
+            # guesses used
+            guesses_used = game.initial_attempts - game.attempts_left
+            self._stats.total_guesses_in_wins += guesses_used
+            if self._stats.fastest_win_attempts is None or guesses_used < self._stats.fastest_win_attempts:
+                self._stats.fastest_win_attempts = guesses_used
+        else:
+            self._stats.games_lost += 1
+            self._stats.current_streak = 0
+
+    # Extension 2: public API for stats
+    def get_stats(self) -> Stats:
+        return self._stats
+
+    def reset_stats(self) -> None:
+        with self._lock:
+            self._stats = Stats()

@@ -5,8 +5,8 @@ Explicit validation & Pydantic models
 - Defines the structure of API requests and responses.
 """
 
-from typing import List, Literal
-from pydantic import BaseModel, Field, conlist, field_validator
+from typing import List, Literal, Optional
+from pydantic import BaseModel, Field, field_validator
 
 # 1. Represents response when a new game is started
 class NewGameResponse(BaseModel):
@@ -69,3 +69,27 @@ class GuessResponse(BaseModel):
     feedback: GuessEntryOut | None = Field(None, description="Feedback from the latest guess")
     secret: List[int] | None = Field(None, description="The secret code (only revealed if game is over)")
     note: str | None = Field(None, description="Extra note (ex. 'Game lost. No more guesses.')")
+
+# 6. Extension 2: Response schema for scoreboard
+class StatsOut(BaseModel):
+    games_started: int = Field(..., description="Total games started this session")
+    games_won: int = Field(..., description="Total games won this session")
+    games_lost: int = Field(..., description="Total games lost this session")
+
+    current_streak: int = Field(..., description="Current consecutive wins")
+    best_streak: int = Field(..., description="Best consecutive wins")
+
+    average_guesses_to_win: Optional[float] = Field(
+        None, description="Average number of guesses used in wins"
+    )
+    fastest_win_attempts: Optional[int] = Field(
+        None, description="Fewest guesses taken to win a game"
+    )
+
+    easy_started: int = Field(..., description="Games started on Easy difficulty")
+    medium_started: int = Field(..., description="Games started on Medium difficulty")
+    hard_started: int = Field(..., description="Games started on Hard difficulty")
+
+    easy_won: int = Field(..., description="Games won on Easy difficulty")
+    medium_won: int = Field(..., description="Games won on Medium difficulty")
+    hard_won: int = Field(..., description="Games won on Hard difficulty")

@@ -1,8 +1,10 @@
 '''
 FastAPI endpoints:
-POST /games → start a game (uses random_client + store.create)
-POST /games/{id}/guess → submit a guess (uses store.guess → engine.score_guess)
-GET /games/{id} → read state & history
+POST /games -> start a game (uses random_client + store.create)
+POST /games/{id}/guess -> submit a guess (uses store.guess → engine.score_guess)
+GET /games/{id} -> read state & history
+GET /stats -> view scoreboard
+POST /stats/reset -> reset scoreboard
 '''
 
 from fastapi import FastAPI, HTTPException
@@ -16,6 +18,7 @@ from .schemas import (
     GuessResponse,
     GameState,
     GuessEntryOut,
+    StatsOut # Extension 2
 )
 
 app = FastAPI(title="Mastermind API", version="1.0.0")
@@ -56,7 +59,7 @@ def start_game(difficulty: str = "medium") -> NewGameResponse:
     secret = fetch_code(length)
 
     # Create game in store with attempts set
-    game = store.create(secret, attempts)
+    game = store.create(secret, attempts, difficulty)
 
     return NewGameResponse(
         game_id=game.id,
@@ -127,7 +130,10 @@ def submit_guess(game_id: str, payload: GuessRequest) -> GuessResponse:
         )
 
     # 3. Apply the guess once (this decrements attempts and appends feedback)
-    game = store.guess(game_id, payload.guess)
+    try:
+        game = store.guess(game_id, payload.guess)
+    except ValueError as ve:
+        raise HTTPException(status_code=400, detail=str(ve))
 
     # 4. Defensive: ensure feedback exists
     if not game.history:
@@ -164,3 +170,33 @@ def submit_guess(game_id: str, payload: GuessRequest) -> GuessResponse:
             timestamp=feedback.timestamp,
         ),
     )
+
+# Extension 2: Endpoint to view scoreboard
+@app.get("/stats", response_model = StatsOut, summary="Get per-session scoreboard")
+def get_stats() -> StatsOut:
+    stats = store.get_stats()
+    average = None
+    if stats.games_won > 0:
+        average = stats.total_guesses_in_wins / stats.games_won
+
+    return StatsOut(
+        games_started=stats.games_started,
+        games_won=stats.games_won,
+        games_lost=stats.games_lost,
+        current_streak=stats.current_streak,
+        best_streak=stats.best_streak,
+        average_guesses_to_win=average,
+        fastest_win_attempts=stats.fastest_win_attempts,
+        easy_started=stats.easy_started,
+        medium_started=stats.medium_started,
+        hard_started=stats.hard_started,
+        easy_won=stats.easy_won,
+        medium_won=stats.medium_won,
+        hard_won=stats.hard_won,
+    )
+
+# Extension 2: Endpoint to reset scoreboard
+@app.post("/stats/reset", summary="Reset the scoreboard")
+def reset_stats() -> dict:
+    store.reset_stats()
+    return {"message": "Stats reset for this server session."}
