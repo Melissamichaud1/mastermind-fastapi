@@ -23,7 +23,8 @@ from .schemas import (
     GuessResponse,
     GameState,
     GuessEntryOut,
-    StatsOut # Extension 2
+    StatsOut, # Extension 2
+    HintOut,  # Extension 3
 )
 
 app = FastAPI(title="Mastermind API", version="1.0.0")
@@ -205,3 +206,33 @@ def get_stats() -> StatsOut:
 def reset_stats() -> dict:
     store.reset_stats()
     return {"message": "Stats reset for this server session."}
+
+# Extension 3: Get a hint
+@app.get("/games/{game_id}/hint", summary="Get a hint: Reveals one digit/position (once per game)")
+def get_hint(game_id: str) -> HintOut:
+    result = store.give_hint(game_id)
+    status = result[0]
+    data = result[1]
+
+    if status == "not_found":
+        raise HTTPException(status_code=404, detail="Game not found")
+
+    if status == "finished":
+        raise HTTPException(status_code=409, detail="Game finished. No hint available.")
+
+    if status == "already_used":
+        raise HTTPException(status_code=409, detail="Hint already used for this game.")
+
+    # status == "ok"
+    position = data[0]
+    digit = data[1]
+
+    # Read attempts_left to include in response
+    game = store.get(game_id)
+
+    return HintOut(
+        position=position,
+        digit=digit,
+        attempts_left=game.attempts_left,
+        note="You used your only hint for this game."
+    )

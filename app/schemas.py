@@ -93,3 +93,10 @@ class StatsOut(BaseModel):
     easy_won: int = Field(..., description="Games won on Easy difficulty")
     medium_won: int = Field(..., description="Games won on Medium difficulty")
     hard_won: int = Field(..., description="Games won on Hard difficulty")
+
+# 7. Extension 3: Response schema for hint
+class HintOut(BaseModel):
+    position: int = Field(..., description="Index in the code")
+    digit: int = Field(..., description="Digit at that index")
+    attempts_left: int = Field(..., description="Guesses remaining")
+    note: str = Field(..., description="Extra info, ex. 'You used your only hint!")

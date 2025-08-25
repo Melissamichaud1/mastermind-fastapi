@@ -8,6 +8,7 @@ from typing import Dict, List, Optional
 from uuid import uuid4
 from time import time
 from threading import RLock
+from secrets import randbelow
 
 from .types import Code, GameStatus, Difficulty
 from .engine import score_guess, is_win
@@ -32,6 +33,9 @@ class Game:
     # Extension 2: store starting attempts to calculate guesses used in wins
     initial_attempts: int = 10
     difficulty: Difficulty = "medium"
+    # Extension 3: get a hint
+    hint_used: bool = False
+    revealed_positions: List[int] = field(default_factory=list)
 
 # Extension 2: Scoreboard structure
 @dataclass
@@ -182,3 +186,54 @@ class GameStore:
     def reset_stats(self) -> None:
         with self._lock:
             self._stats = Stats()
+
+    # Extension 3: Generate one hint (position, digit) for a game
+    def give_hint(self, game_id: str):
+        """
+        Returns a tuple like ("ok", (position, digit))
+        Or: ("finished", None) if game ended
+            ("already_used", None) if hint was used
+            ("not_found", None) if no game
+        """
+        with self._lock:
+            game = self._games.get(game_id)
+            if game is None:
+                return ("not_found", None)
+
+            # If the game already ended, we do not provide a hint
+            if game.status != "in_progress":
+                return ("finished", None)
+
+            # Only one hint per game
+            if game.hint_used:
+                return ("already_used", None)
+
+            # Choose a random position we have not revealed yet
+            total = len(game.secret)
+
+            # Safety: if somehow everything was revealed
+            if len(game.revealed_positions) >= total:
+                return ("already_used", None)
+
+            # Continue until we find an index not yet revealed
+            while True:
+                index = randbelow(total) # 0 -> total-1
+                # check if this index is already revealed
+                already_revealed = False
+                j = 0
+                while j < len(game.revealed_positions):
+                    if game.revealed_positions[j] == index:
+                        already_revealed = True
+                        break
+                    j += 1
+
+                if not already_revealed:
+                    break
+
+            # Mark it used and record the index
+            game.hint_used = True
+            game.revealed_positions.append(index)
+            game.updated_at = time()
+
+            digit = game.secret[index]
+            return ("ok", (index, digit))
