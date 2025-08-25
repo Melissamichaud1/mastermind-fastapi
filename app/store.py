@@ -106,16 +106,12 @@ class GameStore:
             if len(game.secret) != len(attempt):
                 raise ValueError(f"Guess must have exactly {len(game.secret)} digits for this game.")
 
+            old_status = game.status
+
             # Get the feedback using the engine
             result = score_guess(game.secret, attempt)
             correct_numbers = result[0]
             correct_positions = result[1]
-
-            # --- duplicate guard here ---
-            if game.history:
-                last = game.history[-1]
-                if last.guess == attempt and game.status == "in_progress":
-                    return game
 
             # Build a message without revealing which digits are correct
             if correct_numbers == 0 and correct_positions == 0:
@@ -143,13 +139,17 @@ class GameStore:
 
             if is_win(game.secret, attempt):
                 game.status = "won"
-                self._update_stats_on_end(game, won=True)    # Extension 2: update stats on WIN
             else:
                 if game.attempts_left <= 0:
                     game.status = "lost"
-                    self._update_stats_on_end(game, won=False)  # Extension 2: update stats on LOSS
 
             game.updated_at = time()
+
+            # Update scoreboard exactly once when we detect a transition
+            # If we moved from "in_progress" to either "won" or "lost", update stats now.
+            if old_status == "in_progress" and game.status in ("won", "lost"):
+                self._update_stats_on_end(game, won=(game.status == "won"))
+
             return game
 
     # Extension 2: Helper updates scoreboard exactly once per game
