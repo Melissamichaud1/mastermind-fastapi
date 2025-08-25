@@ -3,8 +3,13 @@ FastAPI endpoints:
 POST /games -> start a game (uses random_client + store.create)
 POST /games/{id}/guess -> submit a guess (uses store.guess → engine.score_guess)
 GET /games/{id} -> read state & history
+
+Extension 2:
 GET /stats -> view scoreboard
 POST /stats/reset -> reset scoreboard
+
+Extension 3:
+GET /games/{game_id}/hint -> get hint
 '''
 
 from fastapi import FastAPI, HTTPException
