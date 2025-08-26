@@ -27,14 +27,13 @@ This is my implementation of the classic **Mastermind** code-breaking game, buil
 ## 🛠️ Requirements
 
 - Python **3.10+**
-- Node.js (optional, if using a dev server for frontend)
 - Git
 
 Python dependencies are listed in `requirements.txt`.
 
 ---
 
-## 📦 Setup Instructions
+## 📦 Setup Instructions (Local)
 
 1. Clone the repo:
 
@@ -63,26 +62,25 @@ pip install -r requirements.txt
 uvicorn app.main:app --reload
 ```
 
-By default, FastAPI will run on http://127.0.0.1:8000
-Interactive docs are available at http://127.0.0.1:8000/docs
+By default, FastAPI will run at http://127.0.0.1:8000
+
+Visit http://127.0.0.1:8000/ -> loads the frontend (index.html)
+
+Visit http://127.0.0.1:8000/docs -> API documentation (Swagger UI)
+
+Visit http://127.0.0.1:8000/redoc -> Alternative API docs
 
 ---
 
-## 🌐 Frontend
+## 🌐 Deployment (Live Demo)
 
-The frontend lives in the project root inside the frontend folder (index.html, app.js, CSS, HTML).
+The project is deployed on Render:
 
-To run locally:
+👉 Live App: https://mastermind-fastapi.onrender.com/
 
-1. CD into frontend folder
-2. Start a local dev server:
+👉 API Docs: https://mastermind-fastapi.onrender.com/docs
 
-```
-python3 -m http.server 5173
-```
-
-2. Then visit:
-   http://127.0.0.1:5173
+When deployed, the frontend and API are served from the same domain.
 
 ---
 
@@ -93,9 +91,7 @@ FastAPI automatically provides interactive API docs:
 - Swagger UI: [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
 - ReDoc: [http://127.0.0.1:8000/redoc](http://127.0.0.1:8000/redoc)
 
-These docs let you:
-
-1. Explore all endpoints:
+Endpoints:
 
 - **POST `/games`**
   Start a new game. Accepts a `difficulty` query param (`easy`, `medium`, `hard`).
@@ -115,9 +111,6 @@ These docs let you:
 - **POST `/stats/reset`**
   Reset the scoreboard for the current server session.
 
-2. Try requests directly from the browser.
-3. View request/response schemas.
-
 ---
 
 ## 🎯 How to Play
@@ -127,7 +120,6 @@ These docs let you:
 3. The server responds with:
    Correct numbers: how many digits are present in the secret.
    Correct positions: how many are in the exact correct location.
-
 4. Use strategy + logic to break the code before attempts run out.
 5. Optionally, click Get Hint (once per game).
 
@@ -140,7 +132,10 @@ Tests cover both:
 1. Core logic (test_engine.py, test_store.py)
 2. API endpoints (test_api.py)
 3. Run all tests:
-   pytest -v
+
+```
+pytest -v
+```
 
 ---
 

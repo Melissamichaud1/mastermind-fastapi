@@ -242,17 +242,10 @@ def get_hint(game_id: str) -> HintOut:
 
 # ---- Static hosting for the frontend ----
 # Point to the repo's /static folder (index.html, app.js, fonts/, etc.)
-BASE_DIR = Path(__file__).resolve().parent.parent  # repo root (since main.py is in app/)
-STATIC_DIR = BASE_DIR / "static"
+HERE = Path(__file__).resolve().parent          # /.../app
+STATIC_DIR = HERE / "static"                    # /.../app/static
 
-# Serve assets at /static/… (app.js, fonts, images)
-app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
+if not STATIC_DIR.exists():
+    STATIC_DIR = Path(__file__).resolve().parent.parent / "app" / "static"
 
-# Serve the SPA entrypoint at "/"
-@app.get("/", response_class=HTMLResponse)
-def root():
-    index_path = STATIC_DIR / "index.html"
-    if not index_path.exists():
-        # Error if the file isn’t where we expect it in Render
-        return HTMLResponse("<h1>Mastermind</h1><p>index.html not found in /static.</p>", status_code=500)
-    return FileResponse(str(index_path))
+app.mount("/", StaticFiles(directory=str(STATIC_DIR), html=True), name="static")
