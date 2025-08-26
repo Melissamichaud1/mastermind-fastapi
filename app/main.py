@@ -14,6 +14,9 @@ GET /games/{game_id}/hint -> get hint
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse, FileResponse
+from fastapi.staticfiles import StaticFiles
+from pathlib import Path
 
 from .random_client import fetch_code
 from .store import GameStore
@@ -236,3 +239,20 @@ def get_hint(game_id: str) -> HintOut:
         attempts_left=game.attempts_left,
         note="You used your only hint for this game."
     )
+
+# ---- Static hosting for the frontend ----
+# Point to the repo's /static folder (index.html, app.js, fonts/, etc.)
+BASE_DIR = Path(__file__).resolve().parent.parent  # repo root (since main.py is in app/)
+STATIC_DIR = BASE_DIR / "static"
+
+# Serve assets at /static/… (app.js, fonts, images)
+app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
+
+# Serve the SPA entrypoint at "/"
+@app.get("/", response_class=HTMLResponse)
+def root():
+    index_path = STATIC_DIR / "index.html"
+    if not index_path.exists():
+        # Error if the file isn’t where we expect it in Render
+        return HTMLResponse("<h1>Mastermind</h1><p>index.html not found in /static.</p>", status_code=500)
+    return FileResponse(str(index_path))

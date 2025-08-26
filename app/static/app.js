@@ -1,3 +1,10 @@
+// If we're on localhost/127.0.0.1, talk to the local dev server.
+// Otherwise, use same-origin (empty prefix) so /games, /stats, etc. hit this host.
+const API_BASE =
+  location.hostname === "localhost" || location.hostname === "127.0.0.1"
+    ? "http://127.0.0.1:8000"
+    : "";
+
 let gameId = null; // holds the active game's ID
 let difficulty = "medium"; // default difficulty if not selected
 
@@ -121,7 +128,7 @@ function renderHistory(history) {
 async function refreshState() {
   if (!gameId) return;
 
-  const url = `http://127.0.0.1:8000/games/${gameId}`;
+  const url = `${API_BASE}/games/${gameId}`;
   const resp = await fetch(url, { headers: { accept: "application/json" } });
   if (!resp.ok) return;
 
@@ -144,9 +151,7 @@ async function startGame() {
   const dropdown = document.getElementById("difficulty");
   difficulty = dropdown.value;
 
-  const url = `http://127.0.0.1:8000/games?difficulty=${encodeURIComponent(
-    difficulty
-  )}`;
+  const url = `${API_BASE}/games?difficulty=${encodeURIComponent(difficulty)}`;
   const resp = await fetch(url, {
     method: "POST",
     headers: { accept: "application/json" },
@@ -180,7 +185,7 @@ async function submitGuess() {
   const input = document.getElementById("guess-input");
   const guessArray = parseGuess(input.value);
 
-  const resp = await fetch(`http://127.0.0.1:8000/games/${gameId}/guess`, {
+  const resp = await fetch(`${API_BASE}/games/${gameId}/guess`, {
     method: "POST",
     headers: { "Content-Type": "application/json", accept: "application/json" },
     body: JSON.stringify({ guess: guessArray }),
@@ -231,7 +236,7 @@ async function getHint() {
     return;
   }
 
-  const resp = await fetch(`http://127.0.0.1:8000/games/${gameId}/hint`, {
+  const resp = await fetch(`${API_BASE}/games/${gameId}/hint`, {
     method: "GET",
     headers: { accept: "application/json" },
   });
@@ -262,7 +267,7 @@ async function getHint() {
 
 // Load stats and render as pretty table
 async function refreshStats() {
-  const resp = await fetch("http://127.0.0.1:8000/stats", {
+  const resp = await fetch(`${API_BASE}/stats`, {
     headers: { accept: "application/json" },
   });
   if (!resp.ok) {
@@ -313,7 +318,7 @@ async function refreshStats() {
 
 // Reset stats endpoint
 async function resetStats() {
-  const resp = await fetch("http://127.0.0.1:8000/stats/reset", {
+  const resp = await fetch(`${API_BASE}/stats/reset`, {
     method: "POST",
   });
   if (!resp.ok) {
