@@ -383,6 +383,108 @@
         letter-spacing: 0.2px;
         padding: 10px 0;
       }
+
+      /* ---- Mobile Friendly ---- */
+      /* Panels always centered, capped */
+      .panel {
+        width: 100%;
+        max-width: 720px;
+        margin-inline: auto;
+      }
+
+      /* Table formatting */
+      .table {
+        width: 100%;
+        table-layout: fixed; /* prevents columns from blowing out */
+        word-break: break-word;
+      }
+      .table td.mono.nowrap {
+        white-space: nowrap;
+      }
+
+      .table-wrap {
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        margin-inline: auto;
+      }
+
+      /* Header label swapping */
+      .th-short {
+        display: none;
+      }
+      .th-long {
+        display: inline;
+      }
+
+      @media (max-width: 600px) {
+        body {
+          padding: 12px 14px 24px;
+        }
+
+        /* Headings shrink on mobile */
+        h1 {
+          font-size: 38px;
+        }
+        h2 {
+          font-size: 22px;
+        }
+
+        /* Hero pegs smaller */
+        .peg {
+          width: 12px;
+          height: 12px;
+        }
+
+        /* Inputs/buttons stack nicely */
+        select,
+        input[type="text"] {
+          min-width: 0;
+          width: 100%;
+        }
+        .row {
+          gap: 10px;
+          justify-content: center;
+        }
+        .row button {
+          width: 100%;
+        }
+
+        /* Badges & topbar centered */
+        #game-info {
+          justify-content: center;
+        }
+        .badge {
+          margin: 2px;
+        }
+        .topbar {
+          justify-content: center;
+        }
+
+        /* Panels spacing tighter */
+        .desc {
+          padding: 14px;
+        }
+        .panel {
+          padding: 16px;
+        }
+
+        /* Compact table */
+        .table th,
+        .table td {
+          padding: 8px;
+          font-size: 13px;
+        }
+
+        /* Swap to short labels */
+        .th-long {
+          display: none;
+        }
+        .th-short {
+          display: inline;
+        }
+      }
+      /* ---- Mobile Friendly ---- */
     </style>
   </head>
   <body>
@@ -484,18 +586,26 @@
 
           <div class="spacer"></div>
           <h2>History of Guesses</h2>
-          <table class="table">
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Guess</th>
-                <th>Correct Number(s)</th>
-                <th>Correct Position(s)</th>
-                <th>Message</th>
-              </tr>
-            </thead>
-            <tbody id="history-body"></tbody>
-          </table>
+          <div class="table-wrap">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Guess</th>
+                  <th>
+                    <span class="th-long">Correct Number(s)</span>
+                    <span class="th-short">✔️ Numbers</span>
+                  </th>
+                  <th>
+                    <span class="th-long">Correct Position(s)</span>
+                    <span class="th-short">✔️ Positions</span>
+                  </th>
+                  <th>Message</th>
+                </tr>
+              </thead>
+              <tbody id="history-body"></tbody>
+            </table>
+          </div>
 
           <div class="spacer"></div>
           <div id="final-note" class="note"></div>
@@ -510,7 +620,9 @@
             <button id="reset-stats" class="btn-pink">Reset Stats</button>
           </div>
           <div id="stats-msg" class="help" style="margin-bottom: 6px"></div>
-          <div id="stats-json" class="jsonBox"></div>
+          <div class="table-wrap">
+            <div id="stats-json" class="jsonBox"></div>
+          </div>
         </div>
       </div>
     </div>
