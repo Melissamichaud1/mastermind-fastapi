@@ -22,12 +22,8 @@
       href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap"
       rel="stylesheet"
     />
-
     <style>
-      /* ========= THEME VARIABLES =========
-         I use CSS custom properties for both light and dark mode.
-         This keeps the colors consistent and lets me flip themes with a single attribute.
-      */
+      /* ========= THEME VARIABLES ========= */
       :root {
         --radius: 14px;
 
@@ -51,6 +47,13 @@
         --descTint: rgba(255, 134, 207, 0.08);
         --tableStripeOpacity: 0.06;
         --inputBg: #220c1b;
+
+        /* button gradient */
+        --btnFrom: var(--accent2);
+        --btnTo: var(--accent);
+        --btnSecondaryFrom: #f8c3e4;
+        --btnSecondaryTo: #ff86cf;
+        --btnText: #ffffff;
       }
       :root[data-theme="light"] {
         --bg: #e7cad5;
@@ -67,6 +70,55 @@
         --descTint: rgba(255, 134, 207, 0.12);
         --tableStripeOpacity: 0.12;
         --inputBg: #fff7fb;
+
+        --btnFrom: var(--accent2);
+        --btnTo: var(--accent);
+        --btnSecondaryFrom: #f8c3e4;
+        --btnSecondaryTo: #ff86cf;
+        --btnText: #ffffff;
+      }
+
+      /* ========= LINKEDIN THEME ========= */
+      :root[data-theme="linkedin"] body {
+        /* light fade overlay + image in one background declaration */
+
+        background: linear-gradient(
+            rgba(255, 255, 255, 0.65),
+            rgba(255, 255, 255, 0.65)
+          ),
+          url("/img/linkedin-bg.jpg") center center / cover no-repeat fixed;
+        color: var(--text);
+
+        /* LinkedIn brand blues */
+        --liBlue: #0a66c2;
+        --liBlueDark: #004182;
+
+        --bg: #8dafdd;
+        --bg2: #8dafdd;
+        --panel: #eaf3ff;
+        --panelBorder: #0a53a6;
+        --text: #1d2a3b;
+        --subtext: #485a6a;
+        --muted: #dfe8f5;
+        --rowStripe: rgba(10, 102, 194, 0.08);
+        --good: #0a8c6a;
+
+        --btnShadow: rgba(10, 102, 194, 0.18);
+        --descTint: rgba(10, 102, 194, 0.08);
+        --tableStripeOpacity: 0.1;
+        --inputBg: #f9fbff;
+
+        /* override accents to blue family */
+        --accent: var(--liBlue);
+        --accent2: #3f8fd9;
+        --accent3: #a9cdf2;
+
+        /* buttons go blue */
+        --btnFrom: var(--liBlue);
+        --btnTo: var(--liBlueDark);
+        --btnSecondaryFrom: #e5f1ff;
+        --btnSecondaryTo: #cfe6ff;
+        --btnText: #ffffff;
       }
 
       * {
@@ -86,7 +138,7 @@
         display: flex;
         align-items: flex-start;
         justify-content: center;
-        padding: 16px 24px 32px; /* space around content */
+        padding: 16px 24px 32px;
         line-height: 1.6;
         transition: background 0.25s ease, color 0.25s ease;
       }
@@ -109,19 +161,6 @@
         justify-content: space-between;
         gap: 12px;
       }
-      .theme-toggle {
-        display: inline-flex;
-        align-items: center;
-        gap: 10px;
-        background: linear-gradient(180deg, var(--accent3), var(--accent2));
-        color: #20101a;
-        border: none;
-        border-radius: 999px;
-        padding: 8px 12px;
-        font-weight: 700;
-        cursor: pointer;
-        box-shadow: 0 8px 18px var(--btnShadow);
-      }
 
       h1 {
         font-family: "MightySouly", Poppins, sans-serif;
@@ -138,7 +177,6 @@
       h6 {
         font-family: "MightySouly", Poppins, sans-serif;
       }
-
       h2 {
         font-size: 30px;
         font-weight: 400;
@@ -151,12 +189,20 @@
         margin-top: 4px;
       }
 
-      .hero {
+      /* ---- HERO (centered under the H1) ---- */
+      .hero-wrap {
         display: flex;
         align-items: center;
         justify-content: center;
+        margin: 6px 0 12px;
+        position: relative;
+      }
+
+      /* Pink pegs (default theme) */
+      .hero {
+        display: flex;
         gap: 10px;
-        margin: 6px 0 2px;
+        justify-content: center;
       }
       .peg {
         width: 16px;
@@ -183,6 +229,7 @@
         animation-delay: 0.6s;
         background: var(--accent);
       }
+
       @keyframes pop {
         0%,
         100% {
@@ -195,7 +242,38 @@
         }
       }
 
-      /* Rule explanation box */
+      /* LinkedIn logo (only shown in LinkedIn theme) */
+      .li-hero {
+        display: none;
+        justify-content: center;
+        width: 100%;
+        margin-top: 4px;
+      }
+      .li-badge {
+        width: 60px;
+        height: 60px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #0a66c2;
+        box-shadow: 0 6px 16px rgba(10, 102, 194, 0.25);
+      }
+      .li-badge svg {
+        width: 36px;
+        height: 36px;
+        fill: white;
+      }
+
+      /* Swap pegs ↔ LinkedIn badge in LinkedIn theme */
+      :root[data-theme="linkedin"] .hero {
+        display: none;
+      }
+      :root[data-theme="linkedin"] .li-hero {
+        display: flex;
+      }
+
+      /* ---- PANELS ---- */
       .desc {
         max-width: 860px;
         color: var(--subtext);
@@ -225,7 +303,6 @@
         }
       }
 
-      /* Panels for game + scoreboard */
       .panel {
         background: linear-gradient(180deg, var(--descTint), transparent),
           var(--panel);
@@ -236,6 +313,9 @@
           inset 0 0 0.5px rgba(255, 255, 255, 0.12);
         transition: background 0.25s ease, color 0.25s ease,
           border-color 0.25s ease;
+        width: 100%;
+        max-width: 720px; /* keep panels from growing too wide */
+        margin-inline: auto; /* center the panels */
       }
 
       .row {
@@ -252,7 +332,6 @@
         align-items: center;
       }
 
-      /* Badges show game info */
       .badge {
         display: inline-flex;
         align-items: center;
@@ -264,6 +343,13 @@
         color: var(--subtext);
         font-size: 13px;
       }
+      /* Linkedin Badge color */
+      :root[data-theme="linkedin"] .badge {
+        background: rgba(10, 102, 194, 0.12); /* LinkedIn blue tint */
+        border-color: #0a66c2; /* LinkedIn border */
+        color: #0a66c2; /* Optional: make text blue */
+      }
+
       select,
       input[type="text"] {
         background: var(--inputBg);
@@ -274,9 +360,10 @@
         outline: none;
         min-width: 260px;
       }
+
       button {
-        background: linear-gradient(180deg, var(--accent2), var(--accent));
-        color: white;
+        background: linear-gradient(180deg, var(--btnFrom), var(--btnTo));
+        color: var(--btnText);
         border: none;
         border-radius: 12px;
         padding: 12px 16px;
@@ -289,10 +376,91 @@
       button:active {
         transform: translateY(1px);
       }
+      .visually-hidden {
+        position: absolute !important;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+        white-space: nowrap;
+        border: 0;
+      }
+
+      /* Compact, pill-style theme <select> for theme dropdown*/
+      .topbar .theme-select {
+        width: auto;
+        min-width: unset;
+        max-width: 200px;
+        appearance: none;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        border: none;
+        border-radius: 999px;
+        padding: 10px 32px;
+        font-weight: 700;
+        font-size: 15px;
+        cursor: pointer;
+        color: #1d2a3b;
+        background: linear-gradient(
+          180deg,
+          var(--btnSecondaryFrom),
+          var(--btnSecondaryTo)
+        );
+        box-shadow: 0 8px 18px var(--btnShadow);
+        line-height: 1.3;
+        text-align: center;
+        text-align-last: center;
+      }
+
+      /* Custom arrow */
+      .topbar .theme-select {
+        background-image: linear-gradient(
+            180deg,
+            var(--btnSecondaryFrom),
+            var(--btnSecondaryTo)
+          ),
+          url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path fill='%231d2a3b' d='M1 0l4 4 4-4 1 1-5 5-5-5z'/></svg>");
+        background-repeat: no-repeat, no-repeat;
+        background-position: left top, right 10px center;
+        background-size: auto, 10px 6px;
+      }
+
+      .theme-select::-ms-expand {
+        display: none;
+      }
+
+      @media (max-width: 600px) {
+        .topbar {
+          justify-content: center;
+        }
+        .topbar .theme-select {
+          width: 100%;
+          max-width: 260px;
+        }
+      }
+
+      /* Hide-only label for accessibility */
+      .visually-hidden {
+        position: absolute !important;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+        white-space: nowrap;
+        border: 0;
+      }
 
       .secondary {
-        background: linear-gradient(180deg, #f8c3e4, #ff86cf);
-        color: #3a152e;
+        background: linear-gradient(
+          180deg,
+          var(--btnSecondaryFrom),
+          var(--btnSecondaryTo)
+        );
+        color: #1d2a3b;
       }
 
       .help {
@@ -303,12 +471,14 @@
         height: 40px;
       }
 
-      /* Table for guesses + stats */
+      /* ---- TABLES ---- */
       .table {
         width: 100%;
         border-collapse: collapse;
         margin-top: 10px;
         border: 1px solid var(--panelBorder);
+        table-layout: fixed; /* prevents columns from blowing out */
+        word-break: break-word;
       }
       .table th,
       .table td {
@@ -324,11 +494,27 @@
       :root[data-theme="light"] .table th {
         color: #7a2b55;
       }
+      :root[data-theme="linkedin"] .table th {
+        color: #2f477a;
+      }
       .table tr:nth-child(even) {
         background-color: var(--rowStripe);
       }
 
-      /* Utilities */
+      .table-wrap {
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        margin-inline: auto;
+      }
+      /* Table header label swapping */
+      .th-long {
+        display: inline;
+      }
+      .th-short {
+        display: none;
+      }
+
       .nowrap {
         white-space: nowrap;
       }
@@ -337,7 +523,7 @@
           "Liberation Mono", monospace;
       }
 
-      /* "Last Guess" feedback pills */
+      /* "Last Guess" pills */
       .pills {
         display: inline-flex;
         gap: 8px;
@@ -362,7 +548,7 @@
         color: var(--good);
       }
 
-      /* Scoreboard JSON styled nicely */
+      /* Scoreboard */
       .jsonBox {
         white-space: pre-wrap;
         background: var(--inputBg);
@@ -376,7 +562,11 @@
       :root[data-theme="light"] .jsonBox {
         color: #5a2a45;
       }
-      /* Stats table tweaks */
+      :root[data-theme="linkedin"] .jsonBox {
+        color: #26415f;
+      }
+
+      /* Stats table headings centered */
       .stats-table .section-head {
         text-align: center;
         font-weight: 700;
@@ -384,45 +574,12 @@
         padding: 10px 0;
       }
 
-      /* ---- Mobile Friendly ---- */
-      /* Panels always centered, capped */
-      .panel {
-        width: 100%;
-        max-width: 720px;
-        margin-inline: auto;
-      }
-
-      /* Table formatting */
-      .table {
-        width: 100%;
-        table-layout: fixed; /* prevents columns from blowing out */
-        word-break: break-word;
-      }
-      .table td.mono.nowrap {
-        white-space: nowrap;
-      }
-
-      .table-wrap {
-        width: 100%;
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-        margin-inline: auto;
-      }
-
-      /* Header label swapping */
-      .th-short {
-        display: none;
-      }
-      .th-long {
-        display: inline;
-      }
-
+      /* ---- MOBILE FRIENDLY ---- */
       @media (max-width: 600px) {
         body {
           padding: 12px 14px 24px;
         }
 
-        /* Headings shrink on mobile */
         h1 {
           font-size: 38px;
         }
@@ -430,13 +587,11 @@
           font-size: 22px;
         }
 
-        /* Hero pegs smaller */
         .peg {
           width: 12px;
           height: 12px;
         }
 
-        /* Inputs/buttons stack nicely */
         select,
         input[type="text"] {
           min-width: 0;
@@ -450,7 +605,6 @@
           width: 100%;
         }
 
-        /* Badges & topbar centered */
         #game-info {
           justify-content: center;
         }
@@ -461,7 +615,6 @@
           justify-content: center;
         }
 
-        /* Panels spacing tighter */
         .desc {
           padding: 14px;
         }
@@ -469,41 +622,54 @@
           padding: 16px;
         }
 
-        /* Compact table */
         .table th,
         .table td {
           padding: 8px;
           font-size: 13px;
         }
-
-        /* Swap to short labels */
+        /* On phones: hide long labels, show compact ones */
         .th-long {
-          display: none;
+          display: none !important;
         }
         .th-short {
-          display: inline;
+          display: inline !important;
         }
       }
-      /* ---- Mobile Friendly ---- */
     </style>
   </head>
   <body>
     <div class="container" id="page">
       <div class="topbar">
-        <!-- Hidden element keeps the H1 visually centered -->
         <div style="visibility: hidden">.</div>
-        <button id="theme-toggle" class="theme-toggle" title="Toggle theme">
-          Light / Dark
-        </button>
+        <label for="theme-select" class="visually-hidden">Theme</label>
+        <select id="theme-select" class="theme-select" title="Choose theme">
+          <option value="dark">Dark Mode 🌙</option>
+          <option value="light">Light Mode ☀️</option>
+          <option value="linkedin">LinkedIn Mode 🔵</option>
+        </select>
       </div>
 
       <h1>Mastermind</h1>
-      <div class="hero" aria-hidden="true">
-        <div class="peg"></div>
-        <div class="peg"></div>
-        <div class="peg"></div>
-        <div class="peg"></div>
-        <div class="peg"></div>
+      <div class="hero-wrap">
+        <!-- Pink pegs (visible in dark/light) -->
+        <div class="hero">
+          <div class="peg"></div>
+          <div class="peg"></div>
+          <div class="peg"></div>
+          <div class="peg"></div>
+          <div class="peg"></div>
+        </div>
+
+        <!-- LinkedIn badge (visible in linkedin theme) -->
+        <div class="li-hero">
+          <div class="li-badge" aria-label="LinkedIn">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path
+                d="M4.98 3.5C4.98 4.88 3.86 6 2.5 6S0 4.88 0 3.5 1.12 1 2.5 1 4.98 2.12 4.98 3.5zM.5 8h4V24h-4V8zm7.5 0h3.8v2.2h.05c.53-1 1.83-2.2 3.77-2.2 4.03 0 4.77 2.65 4.77 6.1V24h-4v-7.4c0-1.76-.03-4.02-2.45-4.02-2.45 0-2.82 1.9-2.82 3.88V24h-4V8z"
+              />
+            </svg>
+          </div>
+        </div>
       </div>
 
       <!-- Game instructions -->
@@ -627,20 +793,24 @@
       </div>
     </div>
 
-    <!-- Theme toggle JS-->
+    <!-- Theme toggle: cycles dark -> light -> linkedin -->
     <script>
       (function () {
+        const THEMES = ["dark", "light", "linkedin"];
         const root = document.documentElement;
-        const btn = document.getElementById("theme-toggle");
-        const saved = localStorage.getItem("mm-theme") || "dark";
+        const select = document.getElementById("theme-select");
+
+        // load & apply saved theme
+        let saved = localStorage.getItem("mm-theme") || "dark";
+        if (!THEMES.includes(saved)) saved = "dark";
         root.setAttribute("data-theme", saved);
-        btn.textContent = saved === "light" ? "Dark Mode" : "Light Mode";
-        btn.addEventListener("click", () => {
-          const current = root.getAttribute("data-theme") || "dark";
-          const next = current === "dark" ? "light" : "dark";
+        select.value = saved;
+
+        // switch theme on change
+        select.addEventListener("change", () => {
+          const next = select.value;
           root.setAttribute("data-theme", next);
           localStorage.setItem("mm-theme", next);
-          btn.textContent = next === "light" ? "Dark Mode" : "Light Mode";
         });
       })();
     </script>
