@@ -14,7 +14,6 @@ GET /games/{game_id}/hint -> get hint
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from pathlib import Path
 
@@ -104,6 +103,7 @@ def get_game(game_id: str) -> GameState:
         attempts_left=game.attempts_left,
         status=game.status,
         history=history_out,
+        difficulty=game.difficulty,
     )
 
 @app.post("/games/{game_id}/guess", response_model=GuessResponse, summary="Submit a guess")

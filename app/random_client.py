@@ -48,9 +48,9 @@ def fetch_code(length: int = 4) -> List[int]:
                 digits.append(value)
             i += 1
 
-        # Check that we got exactly 4 numbers
-        if len(digits) != 4:
-            raise ValueError("random.org returned the wrong number of values.")
+        # Check that we got exactly the requested number of digits
+        if len(digits) != length:
+            raise ValueError(f"random.org returned {len(digits)} values, expected {length}.")
 
         # Check each number is between 0 and 7
         j = 0

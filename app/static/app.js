@@ -29,6 +29,20 @@ function formatGuessArray(arr) {
   return "[" + arr.join(", ") + "]";
 }
 
+// Show an error message and make the box visible
+function setError(msg) {
+  const box = document.getElementById("last-feedback");
+  box.textContent = msg;
+  box.style.display = "block";
+}
+
+// Hide and clear the error message
+function clearError() {
+  const box = document.getElementById("last-feedback");
+  box.textContent = "";
+  box.style.display = "none";
+}
+
 // Updates the "Last Guess" card with feedback from the server
 function setLastGuessCard(feedback) {
   const card = document.getElementById("last-guess");
@@ -165,6 +179,7 @@ async function startGame() {
   gameId = data.game_id;
 
   // Reset UI panels
+  clearError(); // hide any previous error
   document.getElementById("last-feedback").textContent = "";
   document.getElementById("final-note").textContent = "";
   document.getElementById("secret-box").textContent = "";
@@ -193,13 +208,33 @@ async function submitGuess() {
 
   if (!resp.ok) {
     // backend returns error if wrong length guess etc.
-    const text = await resp.text();
-    document.getElementById("last-feedback").textContent = `Error: ${text}`;
+    const clone = resp.clone();
+    let msg = "Invalid input.";
+    try {
+      const data = await resp.json();
+      if (data && data.detail) {
+        if (Array.isArray(data.detail)) {
+          msg = data.detail
+            .map((d) => d.msg || d.detail || "Invalid input.")
+            .join("; ");
+        } else if (typeof data.detail === "string") {
+          msg = data.detail;
+        }
+      }
+    } catch {
+      // If JSON parse fails, fall back to raw text from the clone
+      const text = await clone.text();
+      msg = text || msg;
+    }
+    setError(`⚠️ ${msg}`);
     setLastGuessCard(null);
     return;
   }
 
   const result = await resp.json();
+
+  // Successful guess -> hide any previous error
+  clearError();
 
   // Update "Last Guess" card
   if (result && result.feedback) {
@@ -340,4 +375,7 @@ window.addEventListener("DOMContentLoaded", () => {
     .getElementById("refresh-stats")
     .addEventListener("click", refreshStats);
   document.getElementById("reset-stats").addEventListener("click", resetStats);
+  // Clear error as the user edits their guess
+  const gi = document.getElementById("guess-input");
+  gi.addEventListener("input", clearError);
 });

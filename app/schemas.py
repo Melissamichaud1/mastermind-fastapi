@@ -61,6 +61,7 @@ class GameState(BaseModel):
     attempts_left: int = Field(..., description="How many guesses remain")
     status: Literal["in_progress", "won", "lost"] = Field(..., description="Current state of the game")
     history: List[GuessEntryOut] = Field(..., description="All guesses made so far with feedback")
+    difficulty: Literal["easy", "medium", "hard"] = Field(..., description="Difficulty level of game")
 
 # 5. Result of a guess (or end of the game)
 class GuessResponse(BaseModel):
