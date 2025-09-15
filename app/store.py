@@ -1,6 +1,8 @@
 """
 In-memory store
-Holds game state in memory.
+Holds game state in memory (tiny database in RAM).
+Creates a game, fetches one by id, applies a guess, tracks attempts and history.
+Thread-safe so multiple requests don’t clash.
 """
 
 from dataclasses import dataclass, field
@@ -62,6 +64,7 @@ class Stats:
 class GameStore:
     def __init__(self) -> None:
         self._games: Dict[str, Game] = {}
+        # FastAPI can process multiple requests in parallel. Avoid race conditions
         self._lock = RLock()
         # Extension 2: initialize stats
         self._stats = Stats()
